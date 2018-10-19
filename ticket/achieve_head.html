@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css"/>
+</head>
+<body>
+    <div id="wrap" class="flex-wrap flex-vertical">
+    	<header>
+			<ul>
+				<li class="active">
+					<h1>完成头部</h1>
+					<div class="left" tapmode="active" onclick="api.closeWin();">
+						<img class="ic-back" src="../../image/arr-left.png"/>
+					</div>
+					<div class="right"></div>
+				</li>
+			</ul>
+		</header>
+		<div id="nav" class="flex-wrap">
+			<div class="flex-con nav-tab active" tapmode="text-active" onclick="switchTab('achieve_tabs',this);">服务内容</div>
+			<div class="flex-con nav-tab" tapmode="text-active" onclick="switchTab('achieve_tabs',this);">用户确认</div>
+		</div>
+		<div id="main" class="flex-con"></div>
+	</div>
+</body>
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/tabs.js"></script>
+<script type="text/javascript">
+	apiready = function(){
+		$api.fixStatusBar($api.dom('header'));
+		$api.text($api.dom("h1"), api.pageParam.title);
+	    addFrames('achieve_tabs','achieve',api.pageParam);
+	};
+</script>
+

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	#block{ height:auto;padding:0 15px; }
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+		#block .focus{padding:0 3px!important;}
+       	.big-bt{background:#ffffff;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+    	<div class="card">
+      		<div class="left">产品名称</div>
+      		{{? it != null && it.record != null && it.record.name != null}}
+      			<div class="center"><input id="name" type="text" value="{{=it.record.name}}" /></div>
+      		{{??}}
+      			<div class="center"><input id="name" type="text" placeholder="请填写产品名称" /></div>
+      		{{?}}
+      	</div>
+    	<div class="card">
+      		<div class="left">产品型号</div>
+      		{{? it != null && it.record != null && it.record.model != null}}
+      			<div class="center"><input id="model" type="text" value="{{=it.record.model}}" /></div>
+      		{{??}}
+      			<div class="center"><input id="model" type="text" placeholder="请填写产品型号" /></div>
+      		{{?}}
+			
+      	</div>
+    	<div class="card">
+      		<div class="left">出厂编号</div>
+      		{{? it != null && it.record != null && it.record.code != null}}
+				<div class="center"><input id="code" type="text" value="{{=it.record.code}}" /></div>
+			{{??}}
+				<div class="center"><input id="code" type="text" placeholder="请填写出厂编号" /></div>
+			{{?}}
+      	</div>
+      	<div class="focus border-b">
+      		<h4>情况描述</h4>
+      		{{? it != null && it.record != null && it.record.desc != null}}
+				<p id="desc" class="center" contenteditable="true" placeholder="可填入200字(选填)">{{=it.record.desc}}</p>
+			{{??}}
+				<p id="desc" class="center" contenteditable="true" placeholder="可填入200字(选填)"></p>
+			{{?}}
+      	</div>
+      	<div class="big-bt blue"><input type="button" value="提交现场情况记录" onclick="subTicketRecord();" /></div>
+	</script>
+	<div id="block">
+
+	</div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function(){
+		ajaxLoad();
+	}
+
+	// 加载数据
+	function ajaxLoad(){
+		ajaxRequest('getTicketRecord',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+
+    function subTicketRecord() {
+		api.showProgress({
+			title : '现场签到中...',
+			modal : true
+		});
+	 	var valve = {
+	 		ticket_id:api.pageParam.id,
+	 		name: $api.val($api.byId("name")),
+	 		model: $api.val($api.byId("model")),
+	 		code: $api.val($api.byId("code")),
+	 		desc: $api.text($api.byId("desc")),
+		};
+		if (!fieldValidate(valve["name"], '产品名称')) return;
+		if (!fieldValidate(valve["model"], '产品型号')) return;
+		if (!fieldValidate(valve["code"], '出厂编码')) return;
+		if (!fieldValidate(valve["desc"], '使用材料')) return;
+		
+		ajaxRequest('subTicketRecord', 'post', valve, function(ret, error) {
+			if(ret){
+				api.toast({
+					msg : '提交成功！',
+					duration : 1000,
+					location : "middle"
+				});
+			}
+		});
+    }
+</script>
+</html>

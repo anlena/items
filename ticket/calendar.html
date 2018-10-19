@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>title</title>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css"/>
+    <style>
+    	html,body{background:#F7F7F7;}
+    	.title{line-height:40px;padding:0 10px;background:#E0E0E0;margin-bottom:240px;}
+    	.title .left{padding-right:24px;background: url(../../image/arr_down.png) no-repeat right center;background-size: 12px 6px;}
+    	.title .right{text-align:right;color:#666666;}
+    	.finish{color:#3892ce;padding:0 15px;text-align:right;margin-bottom:20px;}
+    	.list{padding: 0 10px;}
+		.task{padding:15px 0;box-shadow: 0px 0px 3px #bbb;margin-bottom: 10px;border-radius:3px;}
+		.task .left{padding: 0 15px 0 20px;position: relative;width:30%;color:#3892ce;align-items: center;justify-content: center;font-size:16px;}
+    	.task.done .left{color:#999999;font-size:16px;}
+    	.task .left p:first-of-type{text-align:center;font-size: 16px;}
+    	.task .left p:last-of-type{font-size:12px;text-align:center;margin-top:5px;}
+    	.task .left i{position:absolute;left:0;top:-10%;height:120%;width:4px;background:#3892ce;border-top-right-radius: 4px;border-bottom-right-radius: 4px;}
+    	.task.done .left i{background:#999999;}
+    	.task .center{border-left:1px solid #ddd;padding:0 15px;width:60%;color:#3892ce;}
+    	.task.done .center{color:#999999;}
+    	.task .center p:first-of-type{font-size:16px;margin-bottom:3px;}
+    	.task .center p:last-of-type{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:20px;font-size:12px;}
+   		.task .right{width:10%;background: url(../../image/arr_right.png) no-repeat center center;background-size: 10px 18px;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		<div id="month" class="left" onclick="openMonth()">{{=it.now}}</div>
+		<div class="right flex-con">本月完成{{=it.month_cnt.done}}/{{=it.month_cnt.total}}个任务</div>
+	</script>
+	<script id="list-template" type="text/x-dot-template">
+		{{? it!= null}}
+			{{~it:val:index}}
+				<div class="task flex-wrap">
+					<div class="left flex-wrap flex-vertical">
+						<p>类型：{{=val.remarks}}</p>
+						<p>{{=val.creator}}</p>
+						<i></i>
+					</div>
+					<div class="center ">
+						<p>编号：{{=val.code}}</p>
+						<p>{{=val.state}}</p>
+					</div>
+					<div class="right"></div>
+				</div>
+			{{~}}
+		{{??}}
+			<div class="task flex-wrap">
+				<div class="left flex-wrap flex-vertical">
+					<p>暂无工单</p>
+					<p></p>
+					<i></i>
+				</div>
+			</div>
+		{{?}}
+	</script>
+	<div id="title" class="title flex-wrap"></div>
+	<div class="finish">今天已完成<span></span>个任务</div>
+	<div id="list" class="list flex-wrap flex-vertical"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript" src="../../script/tool.js"></script>
+<script type="text/javascript">
+	var stat = null,day = null;
+	var cancelDates = [];
+	apiready = function(){
+		openCalendar();
+		api.addEventListener({
+		    name: 'todoTimeSelectEvent'
+		}, function(ret, err) {
+			var val = ret.value;
+			if(val.index == 1){
+				var month = val.m < 10? "0" + val.m : val.m;
+		    	stat = val.y + "-" + month;
+		    	turnPage(stat)
+		    	$api.text($api.byId("month"), stat);
+			}
+		});
+		ajaxLoad();
+	};
+	
+	//	日历
+	function ajaxLoad(date){
+		ajaxRequest('getTicketSchedule',"get",{date:date,tab:""},function(ret,error){
+			if(ret){
+				cancelSpecilDates(cancelDates);
+				stat = ret.SvcCont.now;
+				$api.text($api.dom(".finish span"), ret.SvcCont.day_cnt.done+"/"+ret.SvcCont.day_cnt.total);
+				renderHtml(ret.SvcCont)
+            	var rowF = doT.template($api.byId('rows-template').text);
+            	$api.byId('title').innerHTML = rowF(ret.SvcCont);
+			}
+		});
+	}
+	
+	function renderHtml(rows){
+		var schedule = rows.dates;
+		var specialDates = [];
+		cancelDates = [];
+		for(var i = 0;i < schedule.length;i++){
+			cancelDates.push(schedule[i].date);
+			specialDates.push({date:schedule[i].date,color:"#ffffff",bg:'#3892ce'});
+		}
+		setSpecialDates(specialDates);
+	}
+	
+	function ajaxDate(date) {
+		ajaxRequest('getTicketList',"get",{stat:date},function(ret,error){
+			if(ret){
+            	var rowF = doT.template($api.byId('list-template').text);
+            	$api.byId('list').innerHTML = rowF(ret.SvcCont);
+			}
+		});
+	}
+	
+	function openCalendar(){
+		var UICalendar = api.require('UICalendar');
+		UICalendar.open({
+		    rect: {
+		        x: 15,
+		        y: 40,
+		        w: api.frameWidth - 30,
+		        h: 260
+		    },
+		    styles: {
+		        bg: 'rgba(247,247,247,0)',
+		        week: {
+		            weekdayColor: '#000000',
+		            weekendColor: '#999999',
+		            size: 12
+		        },
+		        date: {
+		            color: '#000000',
+		            selectedColor: '#ffffff',
+		            selectedBg: 'rgba(10,128,13,0.4)',
+		            size: 12
+		        },
+		        today: {
+		            color: 'rgb(230,46,37)',
+		            bg: ''
+		        }
+		    },
+		    specialDate: [],
+		    switchMode: 'horizontal',
+		    fixedOn: api.frameName,
+		    fixed: false
+		}, function(ret, err) {
+		    if (ret) {
+		    	var month = "";
+		    	date = "";
+		    	if(ret.month < 10)month = '0' + ret.month;else month = ret.month;
+		    	if(ret.day && ret.day < 10)day = '0' + ret.day;else if(ret.day)day = ret.day;	    	
+		    	if(day != null)date = ret.year + '-' + month + '-' + day;else date = ret.year + '-' + month;
+		    	ajaxDate(date);
+		    	ajaxLoad(ret.year + '-' + month);
+		    }
+		});
+	}
+	
+	
+	function setSpecialDates(specialDates){
+		var UICalendar = api.require('UICalendar');
+		UICalendar.setSpecialDates({
+		    specialDates: specialDates
+		});
+	}
+	
+	function cancelSpecilDates(specialDates){
+		var UICalendar = api.require('UICalendar');
+		UICalendar.cancelSpecialDates({
+		    specialDates: cancelDates
+		});
+	}
+	
+	function turnPage(ym){
+		var UICalendar = api.require('UICalendar');
+		UICalendar.turnPage({
+		    date: ym
+		});
+		ajaxLoad(ym);
+		UICalendar.setDate({
+		    date: ym + '-' + date.substring(8,10),
+		    ignoreSelected: false
+		});
+	}
+
+	function openMonth(){
+		monthSelector(stat, "todoTimeSelectEvent");
+	}
+
+</script>
+</html>

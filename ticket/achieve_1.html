@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	html,body{background:#ffffff;}
+    	#block{ height:auto;padding:0 15px; }
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	#block .focus{padding:0 3px!important;}
+    	#block .focus p{border:1px solid #DDDDDD;padding:8px;}
+    	h4{font-weight:normal;line-height:45px; color:#989898;}
+    	.big-bt{background:#ffffff;}
+    	.select{line-height:50px;align-items:center;}
+    	.select .left{color: #989898; margin-right: 16px; }
+    	.select-box [type="radio"].radio{ display:none; opacity: 0; height: 20px; vertical-align: middle; }
+		.select-box .radio{margin-right:10px;color:#666666;background: url(../../image/r0.png) no-repeat; height: 17px; line-height: 17px; font-size:15px; padding:0 5px; padding-left: 27px; background-size: 17px 17px; background-position: left center; vertical-align: middle; }
+		.select-box [type="radio"].radio:checked+.radio{ background: url(../../image/r3.png) no-repeat; background-size: 17px 17px; background-position: left center; vertical-align: middle;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+    	<div class="select flex-wrap border-b">
+      		<div class="left">满意度</div>
+      		{{? it != null && it.data != null && it.data.state != null}}
+      			<div class="select-box flex-wrap"><input type="text" value="{{=it.data.state}}" disabled="disabled" /></div>
+      		{{??}}
+			<div class="select-box flex-wrap">
+				<span><input type="radio" name="state" id="1" class="radio" value="0" checked="checked" /><label for="1" class="radio">满意</label></span> 
+				<span><input type="radio" name="state" id="2" class="radio" value="1" /><label for="2" class="radio">一般</label></span>
+				<span><input type="radio" name="state" id="3" class="radio" value="2"  /><label for="3" class="radio">不满意</label></span>
+			</div>
+			{{?}}
+      	</div>
+      	<div class="focus">
+      		<h4>用户意见</h4>
+      		{{? it != null && it.data != null && it.data.opinion != null}}
+				<p id="opinion" class="center" contenteditable="false" placeholder="可填入200字(选填)">{{=it.data.opinion}}</p>
+			{{??}}
+				<p id="opinion" class="center" contenteditable="true" placeholder="可填入200字(选填)"></p>
+			{{?}}
+      	</div>
+      	<div class="img">
+      		<h4>用户签字照片</h4>
+	      	<div class="image-box flex-wrap">
+      			{{? it != null && it.data != null && it.data.attaches != null}}
+      			{{~it.data.attaches:val:index}}
+      				{{ images.push(val.url); }} 
+	      			<div>
+	      				<img onclick='viewImage({{=index}});' src="{{=val.url}}"/>
+	      				<span onclick='revAttach(this.parentNode,{{=val.id}})'></span>
+	      			</div>
+	      		{{~}}
+	      		{{??}}
+				<div id="addPic" class="flex-wrap flex-vertical bt" tapmode="bthover" onclick="addPic();">
+					<img src="../../image/photo_bt.png"/>
+					<p>上传图片</p>
+				</div>
+				{{?}}
+			</div>
+      	</div>
+      	{{? it.data == null}}
+      	<div class="big-bt blue"><input type="button" value="提交" onclick="subTicketConfirm();" /></div>
+      	{{?}}
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	var images = [];	
+	apiready = function() {
+		ajaxLoad();
+    };
+    
+	// 加载数据
+	function ajaxLoad(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getTicketConfirm',"get",{
+			"id": api.pageParam.id,
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+    
+    
+    function subTicketConfirm() {
+    	var state = $api.dom("input[name='state']:checked").value;
+	 	var valve = {
+			ticket_id: api.pageParam.id,
+			opinion: $api.text($api.byId("opinion")),
+			state: state,
+		};
+		if (!fieldValidate(valve["state"], '满意度')) return;
+		if (!fieldValidate(valve["opinion"], '用户意见')) return;
+		var files = {};
+		var pics = $api.domAll($api.dom('.image-box'), '.new');
+		for(var i = 0;i < pics.length;i++){
+			var url = $api.attr(pics[i],'src');
+			files["file" + i] = url;
+		}
+		api.showProgress({
+			title : '信息保存中...',
+			modal : true
+		});
+		ajaxRequest('subTicketConfirm', 'post', valve, function(ret, error) {
+			if(ret){
+				ajaxLoad();
+				api.toast({
+					msg : '信息保存成功！',
+					duration : 1000,
+					location : "middle"
+				});
+			}
+		},files);
+    }
+    
+	//图片添加
+	function addPic() {
+		var ary = [{
+			code : 'camera',
+			name : '拍摄照片'
+		}, {
+			code : 'album',
+			name : '手机相册'
+		}];
+		api.actionSheet({
+			buttons : ['拍摄照片', '手机相册']
+		}, function(ret, err) {
+			var index = ret.buttonIndex;
+			if (index <= ary.length) {
+				var item = ary[index - 1];
+				getPicture(item.code, function(pic) {
+					if (pic && pic.data && pic.data != "") {
+						var url = pic.data;
+						var imgLength = $api.domAll('.image-box div').length;
+						var str = "<div><img  class='new' src='" + url + "' onclick='viewImage("+ imgLength +");' /><span onclick='revPic(this.parentNode,"+ imgLength +");'></span></div>";
+						images.push(url);
+						$api.before($api.dom("#addPic"), str);
+					}
+				});
+			}
+		});
+	}
+	
+	//删除图片
+	function revPic(dom,index) {
+		$api.remove(dom);
+		images.splice(index-1,1);
+	}
+	
+	function revAttach(dom, id){
+		ajaxRequest("revAttach","post", { id: id } ,function(ret,error){
+			revPic(dom);
+	    });
+	}
+
+	//图片预览
+	function viewImage(i){
+         var photoBrowser = api.require('photoBrowser');
+         if(photoBrowser != null){
+             photoBrowser.open({
+			     images: images,
+			     bgColor: '#000',
+			     activeIndex: i
+			 }, function(ret, err) {
+				if(ret && ret.eventType == 'click'){
+					photoBrowser.close();
+				}
+			});
+         }
+	}
+</script>
+</html>

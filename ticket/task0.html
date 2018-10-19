@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+    	<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+		<link rel="stylesheet" type="text/css" href="../../css/api.css" />
+		<link rel="stylesheet" type="text/css" href="../../css/style.css" />
+		<style>
+			dl{padding: 0 10px;background: #FFFFFF;margin-bottom:5px;}
+			dt{line-height: 30px;color: #666666;font-size:13px;}
+			dt .time{color: #F6B116;}
+			dd{padding: 8px 5px;}
+			dd .left{width: 60px;height: 60px;line-height: 60px;font-size:30px;text-align: center;background: #3892ce;color: #FFFFFF;border-radius: 30px;}
+			dd .center{overflow:hidden;padding-left:15px;}
+			dd p{width:100%;color:#666666;margin-bottom:5px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow: ellipsis;}
+			dd .title{color:#333333;font-size:15px!important;}
+			dd .right{width: 20px;background: url(../../image/arr_right.png) no-repeat center center;background-size: 10px 18px;}
+		</style>
+	</head>
+	<body>
+		<script id="rows-template" type="text/x-dot-template">
+			{{~it:val:index}}
+			<dl onclick="openTicket({{=val.id}},'{{=val.code}}','{{=val.color}}',{{=val.state}});">
+				<dt class="flex-wrap border-b">
+					<div class="flex-con">完成时间：{{=val.date}}</div>
+					<div class="time" style="color:{{=val.color}}">{{=val.tip}}</div>
+				</dt>
+				<dd class="flex-wrap">
+					<div class="left" style="background:{{=colors[val.type]}};">{{=val.remarks}}</div>
+					<div class="center flex-con">
+						<p class="title">工单编号：{{=val.code}}</p>
+						<p>{{=val.creator}}</p>
+						<p>{{=val.client}} | {{=val.address}}</p>
+					</div>
+					<div class="right"></div>
+				</dd>
+			</dl>
+			{{~}}
+		</script>
+		<div id="rows" class="flex-wrap flex-vertical"></div>
+	</body>
+	<script type="text/javascript" src="../../script/api.js"></script>
+	<script type="text/javascript" src="../../script/des.js"></script>
+	<script type="text/javascript" src="../../script/doT.min.js"></script>
+	<script type="text/javascript" src="../../script/base.js"></script>
+	<script type="text/javascript">
+		var pageBody = { page: 1 };
+		var allLoaded = false;
+		var lodding = false;
+		var colors = ['#3892ce','#00a200','#f6b116','#FF6600','#FF0000','#33CCCC'];
+		apiready = function(){
+			ajaxLoad();
+		};
+		
+		function ajaxLoad(){
+			pageBody["tab"] = "wait";
+			pageQuery("getTaskList");
+		}
+		
+		function switchTab(state){
+			pageBody["page"] = 1;
+			pageBody["tab"] = state;
+			resetQuery("getTaskList");
+		}
+		
+		function reload(){
+			resetQuery("getTaskList");
+		}
+		
+		function emptyLoad(){
+			$api.css($api.dom("#rows"), "height:100%;");
+			$api.html($api.dom("#rows"), '<div class="empty"><img src="../../image/projs_t3.png"/><p>暂无信息</p></div>');
+		}	
+
+		function openTicket(id,code,color,state){
+			if(state == 0 || state == 2 || state == 3){
+				openWinow({
+					id: id,
+					color:color,
+					title : code,
+					name : 'tasks_detail',
+					url : './ticket/task_detail.html',
+				});
+			}else{
+				openWinow({
+					id: id,
+					title : code,
+					color:color,
+					name : 'completed_head',
+					url : './ticket/completed_head.html',
+					winUrl : 'widget://html/ticket/completed_head.html'
+				});   
+			}
+		}
+	</script>
+</html>

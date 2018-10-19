@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	#block{ height:auto; }
+    	.content{ padding:0 15px;}
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	.card .status input{color:#00a200!important;}
+    	.card .location{width:24px;background:url(../../image/todo_location.png) no-repeat center center;background-size:21px 21px;}
+    	.card .mobile{width:24px;background:url(../../image/todo_mobile.png) no-repeat center center;background-size:21px 21px;}
+    	.title{color:#3892ce;line-height:45px;font-size:16px;}
+    	#block .focus{padding:0 3px!important;}
+    	.bt button{height:40px;border-radius:3px;color:#fff;font-size:16px;margin:20px 10px 30px 10px;}
+    	.bt .deal{background:#3892ce;}
+    	.dealHover{background:#1c75b0!important;}
+    	.bt .reject{background:#f6b116;}
+    	.rejectHover{background:#e9a714!important;}
+    	.bt .transmit{background:#00a200;}
+    	.transHover{background:#069806!important;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		{{? it != null && it.data != ""}}
+		<div class="content">
+	    	<div class="card">
+	      		<div class="left">工单编号</div>
+				<div class="center"><input type="text" value="{{=it.data.code}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">工单状态</div>
+				<div class="center status"><input type="text" value="{{=it.data.state_name}}" disabled="disabled" /></div>
+	      	</div>
+		</div>	
+      	<div class="h10"></div>
+      	<div class="content">
+	      	<div class="title border-b">用户反馈情况</div>
+	    	<div class="card">
+	      		<div class="left">工单类型</div>
+				<div class="center"><input type="text" value="{{=it.data.type}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">公司名称</div>
+				<div class="center"><input type="text" value="{{=it.data.client}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">客户地址</div>
+				<div class="center"><input type="text" value="{{=it.data.address}}" disabled="disabled" /></div>
+	      		<div class="location"></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">联系人</div>
+				<div class="center"><input type="text" value="{{=it.data.linked}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">联系电话</div>
+				<div class="center"><input type="text" value="{{=it.data.mobile}}" disabled="disabled" /></div>
+	      		<div class="mobile"></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">反馈时间</div>
+				<div class="center"><input type="text" value="{{=it.data.recv_time}}" disabled="disabled" /></div>
+	      	</div>
+	      	<div class="focus">
+	      		<h4>用户反馈内容</h4>
+  				<p id="desc" class="center" contenteditable="false" placeholder="可填入200字(选填)">{{? it.data.remarks != null}}{{=it.data.remarks}}{{?}}</p>
+	      	</div>
+      	</div>
+      	<div class="h10"></div>
+      	<div class="content">
+	      	<div class="title border-b">派单信息</div>
+	      	<div class="card">
+	      		<div class="left">派单人员</div>
+				<div class="center"><input type="text" value="{{=it.data.creator}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">派单时间</div>
+				<div class="center"><input type="text" value="{{=it.data.create_time}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">处理人员</div>
+				<div class="center"><input type="text" value="{{=it.data.handler}}" disabled="disabled" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">完成时间</div>
+				<div class="center"><input type="text" value="{{=it.data.expire_date}}" disabled="disabled" /></div>
+	      		<div style="color:{{=api.pageParam.color}}">{{=it.time}}</div>
+	      	</div>
+	      	{{? it.data.state != 1 && it.data.state != 4}}
+		      	<div class="bt flex-wrap">
+		      		<button class="flex-con reject" tapmode="rejectHover" onclick="openReject();">驳回</button>
+		      		<button class="flex-con transmit" tapmode="transHover" onclick="openAchive();">完成</button>
+		      		<button class="flex-con deal" tapmode="dealHover" onclick="Deal('{{=it.time}}');">处理</button>
+		      	</div>
+	      	{{?}}
+      	</div>
+      	{{?}}
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function() {
+		ajaxLoad();
+    };
+    
+    //驳回
+    function openReject(){
+    	api.openFrame({
+	        name: 'reject_box',
+	        url: './reject_box.html',
+	        pageParam:{id:api.pageParam.id},
+	        rect: {
+		        x:0,
+		        y:0,
+		        w:"auto",
+		        h:"auto"
+	        }
+        });
+    }
+    
+    //完成
+    function openAchive(){
+		openWinow({
+			id: api.pageParam.id,
+			title : api.pageParam.title,
+			name : 'achieve_head',
+			url : './ticket/achieve_head.html',
+			winUrl : 'widget://html/ticket/achieve_head.html'
+		});   
+    }
+    
+    //处理
+	function Deal(time){
+		ajaxRequest('dealBtnClick',"post",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret){
+				api.toast({
+	                msg:'已处理',
+	                location:"middle"
+                });
+			}
+		});
+		openWinow({
+			id: api.pageParam.id,
+			color:api.pageParam.color,
+			time:time,
+			title : api.pageParam.title,
+			name : 'achieve_head',
+			url : './ticket/deal_head.html',
+			winUrl : 'widget://html/ticket/deal_head.html'
+		});  
+	}
+    
+    function openlogs(){
+		openWinow({
+			id: api.pageParam.id,
+			title : '工单流程',
+			name : 'ticket_logs',
+			url : './ticket/log.html'
+		});  
+    }
+    
+	// 加载数据
+	function ajaxLoad(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getTicket',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+	
+    function closeFrame(){
+    	api.closeWin({
+    		name:'task_detail'
+        });
+    }
+</script>
+</html>

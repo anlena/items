@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	#block{ height:auto; }
+    	.content{ padding:0 15px;}
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	.card .status input{color:#00a200!important;}
+    	.card .location{width:24px;background:url(../../image/todo_location.png) no-repeat center center;background-size:21px 21px;}
+    	.card .mobile{width:24px;background:url(../../image/todo_mobile.png) no-repeat center center;background-size:21px 21px;}
+    	.title{color:#3892ce;line-height:45px;font-size:16px;}
+    	#block .focus{padding:0 3px!important;}
+    	.bt button{height:40px;border-radius:3px;color:#fff;font-size:16px;margin:20px 10px 30px 10px;}
+    	.bt .deal{background:#3892ce;}
+    	.dealHover{background:#1c75b0!important;}
+    	.bt .reject{background:#f6b116;}
+    	.rejectHover{background:#e9a714!important;}
+    	.bt .transmit{background:#00a200;}
+    	.transHover{background:#069806!important;}
+    </style>
+</head>
+<body>
+	<div id="block">
+      	<div class="content">
+	      	<div class="title border-b">用户反馈情况</div>
+	    	<div class="card" onclick="getType();">
+	      		<div class="left">工单类型</div>
+	      		<input id="type" type="hidden" />
+				<div class="center"><input id="type_name" type="text" value="" placeholder="请选择工单类型" disabled="disabled" /></div>
+	      		<div class="right"></div>
+	      	</div>
+	    	<div class="card" onclick="getCompany();">
+	      		<div class="left">公司名称</div>
+	      		<input id="client" type="hidden" />
+				<div class="center"><input id="client_name" type="text" value="" placeholder="请填写公司名称" disabled="disabled" /></div>
+	      		<div class="right"></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">客户地址</div>
+	      		<input id="location" type="hidden" />
+				<div class="center"><input id="address" type="text" value="" placeholder="点击获取客户地址" disabled="disabled" /></div>
+	      		<div class="location" onclick="setLocation();"></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">联系人</div>
+				<div class="center"><input id="linked" type="text" value="" placeholder="请填写联系人名称" /></div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">联系电话</div>
+				<div class="center"><input id="mobile" type="text" value="" placeholder="请填联系人电话" /></div>
+				<div class="mobile"></div>
+	      	</div>
+	    	<div class="card" onclick="getTime('recv_time');">
+	      		<div class="left">反馈时间</div>
+				<div class="center"><input id="recv_time" type="text" placeholder="请选择反馈时间" disabled="disabled" /></div>
+	      		<div class="right"></div>
+	      	</div>
+	      	<div class="focus border-b">
+	      		<h4>用户反馈内容</h4>
+	  				<p id="remarks" class="center" contenteditable="true" placeholder="可填入200字(选填)"></p>
+	      	</div>
+      	</div>
+  		<div class="h10"></div>
+		<div class="content">
+			<div class="title border-b">派单信息</div>
+	    	<div class="card" onclick="openWorker();">
+	      		<div class="left">处理人员</div>
+	      		<input id="handler" type="hidden" />
+				<div class="center"><input id="handler_name" type="text" placeholder="请选择处理人员" disabled="disabled" /></div>
+	      		<div class="right"></div>
+	      	</div>
+	    	<div class="card" onclick="getTime('expire_date');">
+	      		<div class="left">完成时间</div>
+				<div class="center"><input id="expire_date" type="text" placeholder="请选择完成时间" disabled="disabled" /></div>
+	      		<div class="right"></div>
+	      	</div>
+		</div>	
+		<div class="big-bt blue"><input type="button" value="发布工单" onclick="publishTicket();" /></div>
+	</div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	var company = [],type = [];
+	apiready = function() {
+		getSelectItem();
+    };
+    
+	// 加载下拉项选择
+	function getSelectItem(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getSelectItem',"get",{},function(ret,error){
+			if(ret){
+				company = ret.SvcCont.company;
+				type = ret.SvcCont.type;
+			}
+		});
+	}
+    
+    //选择工单类型
+	function getType(){
+		var ary = [];
+		for(var i = 0; i < type.length;i++)
+			ary.push(type[i].name);
+		api.actionSheet({
+		    title: '工单类型',
+		    buttons: ary
+		}, function(ret, err) {
+		    var index = ret.buttonIndex;
+		    if(index <= ary.length) {
+		    	var item = type[index - 1];
+		    	$api.val($api.byId("type_name"), item.name);
+				$api.val($api.byId("type"), item.code);
+		    }
+		});
+	}
+	
+    //选择公司
+	function getCompany(){
+		var ary = [];
+		for(var i = 0; i < company.length;i++)
+			ary.push(company[i].name);
+		api.actionSheet({
+		    title: '选择公司',
+		    buttons: ary
+		}, function(ret, err) {
+		    var index = ret.buttonIndex;
+		    if(index <= ary.length) {
+		    	var item = company[index - 1];
+		    	$api.val($api.byId("client_name"), item.name);
+				$api.val($api.byId("client"), item.id);
+		    }
+		});
+	}
+    
+    //获取定位信息
+	function setLocation(){
+		var location = $api.dom("#location").value;
+		var address = $api.dom("#address").value;
+		openWinow({
+			id: api.pageParam.id,
+			title: '设备定位',
+			location: location,
+			address: address,
+			name :  "site_map",
+			url :   "./map.html",
+			winUrl: "./map.html"
+		});
+	}
+	
+	function setMsg(lon,lat,address){
+		$api.val($api.dom("#location"), lon + "," + lat);
+		$api.val($api.dom("#address"), address);
+	}
+    
+    //选择时间
+	function getTime(dom){
+		var stat = null;
+		api.openPicker({
+		    type: 'date',
+		    title: '选择时间'
+		}, function(ret, err) {
+		    if (ret) {
+		    	if(ret.month < 10)
+		    		ret.month = '0' + ret.month;
+		    	if(ret.day < 10)
+		    		ret.day = '0' + ret.day;
+		    	stat = ret.year +'-'+ ret.month +'-'+ ret.day;
+		    	if(dom == "expire_date"){
+		    		$api.val($api.byId(dom), stat);
+		    		return;
+		    	}
+		    	api.openPicker({
+				    type: 'time',
+				    title: '选择时间'
+				}, function(ret, err) {
+				    if (ret) {
+				    	if(ret.hour < 10)
+		    				ret.hour = '0' + ret.hour;
+		    			if(ret.minute < 10)
+		    				ret.minute = '0' + ret.minute;
+				    	stat = stat + ' '+ ret.hour + ':' + ret.minute;
+				    	$api.val($api.byId(dom), stat);
+				    }
+				});	
+		    }
+		});
+	}
+    
+    // 百度坐标转高德
+	function bd_decrypt(bd_lng, bd_lat) {
+	    var X_PI = Math.PI * 3000.0 / 180.0;
+	    var x = bd_lng - 0.0065;
+	    var y = bd_lat - 0.006;
+	    var z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * X_PI);
+	    var theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * X_PI);
+	    var gg_lng = z * Math.cos(theta);
+	    var gg_lat = z * Math.sin(theta);
+	    return (gg_lng + "," +gg_lat)
+	}
+    
+    // 打开负责员工页面
+	function openWorker(){
+		openWinow({
+			win : api.winName,
+			from : api.frameName,
+			saveCmd: 'setWorker',
+			title: '处理人员',
+			name: 'worker',
+			url: './csrs/worker.html'
+		});
+	}
+	
+	// 获取完负责人，将负责人信息添加到页面
+	function setWorker(id,name){
+		$api.val($api.byId("handler"),id);
+		$api.val($api.byId("handler_name"),name);
+	}
+    
+    function publishTicket() {
+    	var bd = $api.val($api.byId("location")).split(",");
+    	var gcj02 = bd_decrypt(bd[0],bd[1]);
+	 	var valve = {
+	 		type:parseInt($api.val($api.byId("type"))),
+	 		client:$api.val($api.byId("client_name")),
+	 		bd09: $api.val($api.byId("location")),
+	 		gcj02:gcj02,
+	 		address: $api.val($api.byId("address")),
+	 		linked: $api.val($api.byId("linked")),
+	 		mobile: $api.val($api.byId("mobile")),
+	 		recv_time: $api.val($api.byId("recv_time")),
+	 		expire_date: $api.val($api.byId("expire_date")),
+	 		remarks: $api.text($api.byId("remarks")),
+	 		handler:parseInt( $api.val($api.byId("handler")))
+		};
+		if (!fieldValidate(valve["type"], '工单类型')) return;
+		if (!fieldValidate(valve["client"], '公司名称')) return;
+		if (!fieldValidate(valve["bd09"], '客户地址')) return;
+		if (!fieldValidate(valve["linked"], '联系人')) return;
+		if (!fieldValidate(valve["mobile"], '联系电话')) return;
+		if (!fieldValidate(valve["handler"], '联系电话')) return;
+		api.showProgress({
+			title : '信息保存中...',
+			modal : true
+		});
+		ajaxRequest('publishTicket', 'post', valve, function(ret, error) {
+			if(ret){
+				api.toast({
+					msg : '信息保存成功！',
+					duration : 1000,
+					location : "middle"
+				});
+				api.execScript({
+					name:'menu_ticket',
+					frameName:'task1',
+	                script: 'reload();'
+                });
+				setTimeout(function() {
+					api.closeWin();
+				}, 300);
+			}
+		});
+    }
+</script>
+</html>

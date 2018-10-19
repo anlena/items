@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	html,body{ position:relative; }
+    	.address{color:#ffffff; font-size:14px;text-align:left;padding-left:50px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    	.left{background:url(../../image/site_line.png) no-repeat right center; background-size: 1px 17px;}
+    	.left img{width:14px; height:15px;}
+    	.rest{width:20px;height:20px;vertical-align: middle;}
+    </style>
+</head>
+<body>
+	<div id="wrap" class="flex-wrap flex-vertical flex-con">
+		<header>
+			<ul>
+				<li class="active">
+					<h1 class="address">位置获取中...</h1>
+					<div class="left" tapmode="active" onclick="quit();">
+						<img class="ic-back" src="../../image/arr-left.png"/>
+					</div>
+					<div class="right" onclick="restLocal()">
+						<img class="rest" src="../../image/local_rest.png"/>
+					</div>
+				</li>
+			</ul>
+		</header>
+	</div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript" src="../../script/map_tools.js"></script>
+<script type="text/javascript">	
+	var config = { id: null, lon: null, lat: null, addr: null };
+	
+	apiready = function() {
+		$api.fixStatusBar( $api.dom('header'));
+		openMap(true, function() {
+			openButton();
+			if(api.pageParam.location != null && api.pageParam.location != "" ){
+				$api.html($api.dom(".address"), api.pageParam.address);
+				config["addr"] = api.pageParam.address;
+				var location = api.pageParam.location.split(",");
+				config["lon"] = location[0],config["lat"] = location[1];
+				var ary = [location[0],location[1]];
+				addAnnotations(ary);
+			}else{
+				autoLocate(true,function(){
+					var ary = [config["lon"],config["lat"]];
+					addAnnotations(ary);
+				});
+			}
+		});
+		api.addEventListener({
+			name : 'keyback'
+		}, function(ret, err) {
+			quit();
+		});
+	};
+
+	function openButton(){
+		api.openFrame({
+	        name: 'map_button',
+	        url: './map_button.html',
+	        animation:{
+	        	type:"movein",
+	        	subType:"from_bottom"
+	        },
+	        bounces: false,
+	        rect: {
+		        x: 0,
+		        y: api.winHeight - 60,
+		        w: 'auto',
+		        h: 60,
+	        }
+        });
+	}
+	
+	function getMsg(){
+		api.execScript({
+			name:'task_edit',
+			frameName:'task_edit',
+	        script: 'setMsg('+ config["lon"] +','+ config["lat"] +',"'+ config["addr"] +'");'
+        });
+		setTimeout(function() {
+			api.closeWin();
+		}, 300);
+	}
+	
+	function addAnnotations(dots){
+		setCenter({lon:dots[0],lat: dots[1]})		
+		bMap.addAnnotations({
+		    annotations: [{
+		        id: 99,
+		        lon: dots[0],
+		        lat: dots[1]
+		    }],
+		    icon: 'widget://image/pipe_03.png',
+		    draggable: true
+		}, function(ret) {
+		    if (ret) {
+		    	if(ret.eventType == "drag" && ret.dragState == "ending"){
+					bMap.getAnnotationCoords({
+					    id: 99
+					}, function(ret) {
+					    if (ret) {
+		        			config["lon"] = ret.lon;
+		        			config["lat"] = ret.lat;
+							getNameFromCoords(ret.lon , ret.lat, function(data){
+								if (data.status) {
+									config["addr"] = data.address;
+									$api.text($api.dom(".address"), config["addr"]);
+								}
+							});
+					    }
+					});
+		    	}
+		    }
+		});
+	}
+	
+	
+	function autoLocate(autoStop, callback){
+		getLocation(autoStop, function(ret) {
+			if(ret.status) {
+				config["lon"] = ret.lon;
+				config["lat"] = ret.lat;
+				getNameFromCoords(config["lon"] , config["lat"], function(ret){
+					if (ret.status) {
+						config["addr"] = ret.address;
+						$api.text($api.dom(".address"), config["addr"]);
+					}
+					if(callback)
+						callback(ret);
+				});
+			} else 
+				autoLocate(autoStop, callback);
+		});
+	}
+	
+	
+	function setCenter(dot){
+		bMap.setCenter({
+		    coords: {
+		        lon: dot.lon,
+		        lat: dot.lat
+		    },
+		    animation: false
+		});
+		bMap.showUserLocation({
+		    isShow: false,
+		    trackingMode: 'none'
+		});
+	}
+	
+	function restLocal(){
+		autoLocate(true,function(){
+			var ary = [config["lon"],config["lat"]];
+			addAnnotations(ary);
+		});
+	}
+	
+	function quit(){
+		setTimeout(function() {
+			api.closeWin();
+		}, 300);
+	}
+</script>

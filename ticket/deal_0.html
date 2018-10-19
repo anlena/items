@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	#block{ height:auto;padding:0 15px; }
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	.card .time{color:#f6b116;}
+    	.big-bt{background:#ffffff;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+    	<div class="card">
+      		<div class="left">处理时间</div>
+      		{{? it != null && it.sign != null && it.sign.time != null}}
+				<div class="center"><input id="date" type="text" value="{{=it.sign.time}}" disabled="disabled" /></div>
+      		{{??}}
+      			<div class="center"><input id="date" type="text"  disabled="disabled" /></div>
+      		{{?}}
+      		<div class="time"></div>
+      	</div>
+    	<div class="card">
+      		<div class="left">处理坐标</div>
+      		{{? it != null && it.sign != null && it.sign.bd09 != null}}
+      			<div class="center"><input id="bd09" type="text" value="{{=it.sign.bd09}}" disabled="disabled" /></div>
+      		{{??}}
+				<div class="center"><input id="bd09" type="text" disabled="disabled" /></div>
+			{{?}}
+      	</div>
+    	<div class="card">
+      		<div class="left">处理地址</div>
+      		{{? it != null && it.sign != null && it.sign.address != null}}
+      			<div class="center"><input id="address" type="text" value="{{=it.sign.address}}" disabled="disabled" /></div>
+      		{{??}}
+				<div class="center"><input id="address" type="text" disabled="disabled" /></div>
+			{{?}}
+      	</div>
+      	<div class="big-bt blue"><input type="button" value="现场签到" onclick="subTicketSign();" /></div>
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function() {
+		$api.text($api.dom(".time"), api.pageParam.time);
+		$api.css($api.dom(".time"),"color:" + api.pageParam.color );
+		ajaxLoad();
+    };
+    
+	// 加载数据
+	function ajaxLoad(){
+		ajaxRequest('getTicketRecord',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+    	if(svc.sign== null || svc.sign.time == null){
+    		$api.val($api.byId("date"), curentTime());
+    	}
+    	if(svc.sign== null || svc.sign.address == null){
+    		getLocal();
+    	}
+	}
+    
+    // 获取当前位置信息
+	function getLocal(){
+		getLocation(true, function(ret){
+			$api.val($api.byId('bd09'), ret.lon + ',' + ret.lat);
+			getNameFromCoords(ret.lon, ret.lat, function(data){
+				$api.val($api.byId('address'), data.address);
+			});
+		});
+	}
+	
+	//获取当前时间
+	function curentTime(){ 
+        var now = new Date();
+       
+        var year = now.getFullYear();       //年
+        var month = now.getMonth() + 1;     //月
+        var day = now.getDate();            //日
+       
+        var hh = now.getHours();            //时
+        var mm = now.getMinutes();          //分
+       
+        var clock = year + "-";
+       
+        if(month < 10)
+            clock += "0";
+       
+        clock += month + "-";
+       
+        if(day < 10)
+            clock += "0";
+           
+        clock += day + " ";
+       
+        if(hh < 10)
+            clock += "0";
+           
+        clock += hh + ":";
+        if (mm < 10) clock += '0'; 
+        clock += mm; 
+        return(clock); 
+    } 
+    
+    function subTicketSign() {
+		api.showProgress({
+			title : '现场签到中...',
+			modal : true
+		});
+		ajaxRequest('subTicketSign', 'post', {"ticket_id":api.pageParam.id,"bd09":$api.byId("bd09").value,"address":$api.byId("address").value}, function(ret, error) {
+			if(ret){
+				api.toast({
+					msg : '签到成功！',
+					duration : 1000,
+					location : "middle"
+				});
+			}
+		});
+    }
+</script>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	html,body{background:#ffffff;}
+    	#block{ height:auto;padding:0 15px; background:#ffffff;}
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	.card .status input{color:#00a200!important;}
+    	#block .focus{padding:0 3px!important;}
+    	#block .focus p{border:1px solid #DDDDDD;padding:8px;}
+    	.select{line-height:45px;align-items:center;}
+    	.select .left{color: #989898; margin-right: 16px; }
+    	.select-box [type="radio"].radio{ display:none; opacity: 0; height: 20px; vertical-align: middle; }
+		.select-box .radio{margin-right:10px;color:#666666;background: url(../../image/r0.png) no-repeat; height: 17px; line-height: 17px; font-size:15px; padding:0 5px; padding-left: 27px; background-size: 17px 17px; background-position: left center; vertical-align: middle; }
+		.select-box [type="radio"].radio:checked+.radio{ background: url(../../image/r3.png) no-repeat; background-size: 17px 17px; background-position: left center; vertical-align: middle;}
+   		.big-bt{background:#ffffff;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		{{? it != null && it.data != null && it.data.time != null}}
+    		<div class="card">
+    	{{??}}
+    		<div class="card" onclick="getTime('finish_time')">
+    	{{?}}
+      		<div class="left">竣工时间</div>
+      		{{? it != null && it.data != null && it.data.time != null}}
+				<div class="center"><input id="finish_time" type="text" value="{{=it.data.time}}" disabled="disabled" /></div>
+      		{{??}}
+      			<div class="center"><input id="finish_time" type="text" placeholder="请选择时间" disabled="disabled" /></div>
+	      		<div class="right"></div>
+      		{{?}}
+      	</div>
+      	<div class="focus">
+      		<h4>售后服务内容</h4>
+      		{{? it != null && it.data != null && it.data.content != null}}
+				<p id="content" class="center" contenteditable="false" placeholder="可填入200字(选填)">{{=it.data.content}}</p>
+			{{??}}
+				<p id="content" class="center" contenteditable="true" placeholder="可填入200字(选填)"></p>
+			{{?}}
+      	</div>
+      	<div class="focus">
+      		<h4>使用材料</h4>
+      		{{? it != null && it.data != null && it.data.material != null}}
+				<p id="material" class="center" contenteditable="false" placeholder="可填入200字(选填)">{{=it.data.material}}</p>
+			{{??}}
+				<p id="material" class="center" contenteditable="true" placeholder="可填入200字(选填)"></p>
+			{{?}}
+      	</div>
+    	<div class="select flex-wrap">
+      		<div class="left">收费情况</div>
+      		{{? it != null && it.data != null && it.data.is_charge != null}}
+      			<div class="select-box flex-wrap"><input type="text" value="{{=it.data.is_charge}}" disabled="disabled" /></div>
+      		{{??}}
+				<div class="select-box flex-wrap">
+					<span><input type="radio" name="is_charge" id="1" class="radio" value="0" checked="checked" onclick="radioClick(1);" /><label for="1" class="radio">免费</label></span> 
+					<span><input type="radio" name="is_charge" id="2" class="radio" value="1" /><label for="2" onclick="radioClick(2);" class="radio">收费</label></span>
+				</div>
+			{{?}}
+      	</div>
+      	{{? it != null && it.data != null && it.data.state == 1}}
+	    	<div class="select flex-wrap fee">
+	      		<div class="left">收费金额</div>
+				<div class="select-box flex-wrap"><input id="fee" type="text" value="{{=it.data.fee}}元" disabled="disabled" /></div>
+	      	</div>
+      	{{??}}
+	    	<div class="select flex-wrap fee" style="display:none;">
+	      		<div class="left">收费金额</div>
+				<div class="select-box flex-wrap"><input id="fee" type="text" placeholder="请输入收费金额" /></div>
+	      	</div>
+      	{{?}}
+    	<div class="select flex-wrap">
+      		<div class="left">服务结果</div>
+      		{{? it != null && it.data != null && it.data.serv != null}}
+      			<div class="select-box flex-wrap"><input type="text" value="{{=it.data.serv}}" disabled="disabled" /></div>
+      		{{??}}
+				<div class="select-box flex-wrap">
+					<span><input type="radio" name="serv" id="3" class="radio" value="0" checked="checked"/><label for="3" class="radio">已解决</label></span> 
+					<span><input type="radio" name="serv" id="4" class="radio" value="1" /><label for="4" class="radio">待观察</label></span>
+					<span><input type="radio" name="serv" id="5" class="radio" value="2" /><label for="5" class="radio">未解决</label></span>
+				</div>
+			{{?}}
+      	</div>
+      	{{?it.data == null}}
+      		<div class="big-bt blue"><input type="button" value="提交" onclick="subTicketServ();" /></div>
+      	{{?}}
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function() {
+		ajaxLoad();
+    };
+    
+	// 加载数据
+	function ajaxLoad(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getServRecord',"get",{
+			"id": api.pageParam.id,
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+    
+    //选择时间
+	function getTime(dom){
+		var stat = null;
+		api.openPicker({
+		    type: 'date',
+		    title: '选择时间'
+		}, function(ret, err) {
+		    if (ret) {
+		    	if(ret.month < 10)
+		    		ret.month = '0' + ret.month;
+		    	if(ret.day < 10)
+		    		ret.day = '0' + ret.day;
+		    	stat = ret.year +'-'+ ret.month +'-'+ ret.day;
+		    	if(dom == "expire_date"){
+		    		$api.val($api.byId(dom), stat);
+		    		return;
+		    	}
+		    	api.openPicker({
+				    type: 'time',
+				    title: '选择时间'
+				}, function(ret, err) {
+				    if (ret) {
+				    	if(ret.hour < 10)
+		    				ret.hour = '0' + ret.hour;
+		    			if(ret.minute < 10)
+		    				ret.minute = '0' + ret.minute;
+				    	stat = stat + ' '+ ret.hour + ':' + ret.minute;
+				    	$api.val($api.byId(dom), stat);
+				    }
+				});	
+		    }
+		});
+	}
+    
+    function radioClick(statu){
+    	if(statu == 1){
+    		$api.css($api.dom(".fee"),"display:none;");
+    	}else{
+    		$api.css($api.dom(".fee"),"display:flex;");
+    	}
+    }
+    
+    function subTicketServ() {
+    	var is_charge = $api.dom("input[name='is_charge']:checked").value;
+    	var serv = $api.dom("input[name='serv']:checked").value;
+	 	var valve = {
+			ticket_id: api.pageParam.id,
+			finish_time:$api.byId('finish_time').value,
+			content: $api.text($api.byId("content")),
+ 			material: $api.text($api.byId("material")),
+			is_charge: is_charge,
+			fee:$api.byId('fee').value,
+			serv: serv
+		};
+		if (!fieldValidate(valve["finish_time"], '竣工时间')) return;
+		if (!fieldValidate(valve["content"], '售后服务内容')) return;
+		if (!fieldValidate(valve["material"], '使用材料')) return;
+		if (!fieldValidate(valve["is_charge"], '收费情况')) return;
+		if (!fieldValidate(valve["serv"], '服务结果')) return;
+		api.showProgress({
+			title : '信息保存中...',
+			modal : true
+		});
+		ajaxRequest('subTicketServ', 'post', valve, function(ret, error) {
+			if(ret){
+				ajaxLoad();
+				api.toast({
+					msg : '信息保存成功！',
+					duration : 1000,
+					location : "middle"
+				});
+			}
+		});
+    }
+    
+    function closeFrame(){
+    	api.closeWin({
+    		name:'task_detail'
+        });
+    }
+</script>
+</html>

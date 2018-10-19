@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	#block{ height:auto; padding: 0 15px;}
+    	#block .focus{padding:0 3px!important;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+      	<div class="focus">
+      		<h4>驳回理由</h4>
+			<p id="desc" class="center" contenteditable="false" placeholder="可填入200字(选填)">{{? it != null}}{{=it}}{{?}}</p>
+      	</div>
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function() {
+		ajaxLoad();
+    };
+    
+    function openlogs(){
+		openWinow({
+			id: api.pageParam.id,
+			title : '工单流程',
+			name : 'ticket_logs',
+			url : './ticket/log.html'
+		});  
+    }
+    
+	// 加载数据
+	function ajaxLoad(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getTicketRecject',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+</script>
+</html>

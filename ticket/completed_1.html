@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	html,body{background:#ffffff;}
+    	#block{ height:auto;padding:0 15px; }
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	#block .focus{padding:0 3px!important;}
+    	#block .focus .img-box{padding:10px;vertical-align: middle;text-align:center;border:1px solid #DDDDDD;}
+    	#block .focus img{height:80px;width:auto;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		{{? it != null}}
+    	<div class="card">
+      		<div class="left">处理时间</div>
+			<div class="center"><input type="text" value="{{? it.sign != null && it.sign.time != null}}{{=it.sign.time}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+    	<div class="card">
+      		<div class="left">处理地点</div>
+			<div class="center"><input type="text" value="{{? it.sign != null && it.sign.bd09 != null}}{{=it.sign.bd09}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+    	<div class="card">
+      		<div class="left">处理地址</div>
+			<div class="center"><input type="text" value="{{? it.sign != null && it.sign.address != null}}{{=it.sign.address}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+    	<div class="card">
+      		<div class="left">处理人员</div>
+			<div class="center"><input type="text" value="{{? it.ticket != null && it.ticket.handler != null}}{{=it.ticket.handler}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+      	
+      	
+    	<div class="card">
+      		<div class="left">产品名称</div>
+			<div class="center"><input type="text" value="{{? it.record != null && it.record.name != null}}{{=it.record.name}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+    	<div class="card">
+      		<div class="left">产品型号</div>
+			<div class="center"><input type="text" value="{{? it.record != null && it.record.model != null}}{{=it.record.model}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+    	<div class="card">
+      		<div class="left">出厂编号</div>
+			<div class="center"><input type="text" value="{{? it.record != null && it.record.code != null}}{{=it.record.code}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+      	<div class="focus">
+      		<h4>用户反馈内容</h4>
+  				<p id="desc" class="center" contenteditable="false" placeholder="可填入200字(选填)">{{? it.record != null && it.record.desc != null}}{{=it.record.desc}}{{??}}暂无信息{{?}}</p>
+      	</div>
+      	{{? it != null && it.attaches.before != ""}}
+      	<div class="focus">
+			<h4>安装前</h4>
+			<div id="before" class="image-box flex-wrap">
+	  			{{~it.attaches.before:val:index}}
+	  				{{ before.push(val.url); }} 
+	      			<div>
+	      				<img onclick='viewImage({{=index}},"before");' src="{{=val.url}}"/>
+	      			</div>
+	      		{{~}}
+			</div>
+      	</div>
+  		{{?}}
+  		{{? it != null && it.attaches.process != ""}}
+      	<div class="focus">
+			<h4>安装过程</h4>
+			<div id="process" class="image-box flex-wrap">
+	  			{{~it.attaches.process:val:index}}
+	  				{{ process.push(val.url); }} 
+	      			<div>
+	      				<img onclick='viewImage({{=index}},"process");' src="{{=val.url}}"/>
+	      			</div>
+	      		{{~}}
+			</div>
+      	</div>
+  		{{?}}
+  		{{? it != null && it.attaches.after != ""}}
+      	<div class="focus">
+			<h4>安装后</h4>
+			<div id="after" class="image-box flex-wrap">
+	  			{{~it.attaches.after:val:index}}
+	  				{{ after.push(val.url); }} 
+	      			<div>
+	      				<img onclick='viewImage({{=index}},"after");' src="{{=val.url}}"/>
+	      			</div>
+	      		{{~}}
+			</div>
+      	</div>
+      	{{?}}
+      	{{?}}
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	var before = [], process = [], after = [];
+	apiready = function(){
+		ajaxLoad();
+	}
+
+	// 加载数据
+	function ajaxLoad(){
+		ajaxRequest('getTicketRecord',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+	
+		//图片预览
+	function viewImage(i,type){
+		var photoBrowser = api.require('photoBrowser');
+        var img = [];
+		if(type == "before"){
+			img = before;
+		}else if(type == "process"){
+			img = process;
+		}else if(type == "after"){
+			img = after;
+		}
+		
+		if(photoBrowser != null){
+		    photoBrowser.open({
+			    images: img,
+			    bgColor: '#000',
+		    	activeIndex: i
+			}, function(ret, err) {
+				if(ret && ret.eventType == 'click'){
+					photoBrowser.close();
+				}
+			});
+ 		}
+	}
+</script>
+</html>

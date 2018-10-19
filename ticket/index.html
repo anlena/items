@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css"/>
+    <style>
+    	.type{display:none;padding:5px 10px;background-color:#f7f7f7;justify-content: flex-end;}
+    	.type .select{flex:0 0 40%;}
+    	.type .select span{padding:10px 0px 10px 20px;border-radius:18px;background:#fff;}
+    	.type .select i{width:40px;display:inline-block;height:10px;background:url(../../image/arr_down.png) no-repeat center center;background-size: 14px 8px;}
+    	.type .item{flex:0 0 20%;color:#999999;text-align:center;padding:10px 0px;}
+    	.type .item.active{color:#3892ce;}
+    </style>
+</head>
+<body>
+    <div id="wrap" class="flex-wrap flex-vertical">
+    	<header>
+			<ul>
+				<li class="active">
+					<h1>售后服务</h1>
+					<div class="left" tapmode="active" onclick="api.closeWin();">
+						<img class="ic-back" src="../../image/arr-left.png"/>
+					</div>
+					<div class="right"></div>
+				</li>
+			</ul>
+		</header>
+		<div id="nav" class="flex-wrap">
+			<div class="flex-con nav-tab active" tapmode="text-active" onclick="switchTab('todo',this);">待办任务</div>
+			<div class="flex-con nav-tab" tapmode="text-active" onclick="switchTab('mine',this);">我的派单</div>
+			<div class="flex-con nav-tab" tapmode="text-active" onclick="switchTab(null,this);">工作日程</div>
+		</div>
+		<div class="type flex-wrap border-b type1">
+			<div class="item" onclick="switchItems('',this,'type1');">全部</div>
+			<div class="item active" onclick="switchItems('wait',this,'type1');">待处理</div>
+			<div class="item" onclick="switchItems('done',this,'type1');">已处理</div>
+		</div>
+		<div class="type flex-wrap border-b type2">
+			<div class="item" onclick="switchItems('',this,'type2');">全部</div>
+			<div class="item active" onclick="switchItems('wait',this,'type2');">待处理</div>
+			<div class="item" onclick="switchItems('reject',this,'type2');">已驳回</div>
+			<div class="item" onclick="switchItems('done',this,'type2');">已处理</div>
+		</div>
+		<div id="main" class="flex-con"></div>
+	</div>
+</body>
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript">
+	var name = '';
+    apiready = function() {
+        $api.fixStatusBar( $api.dom('header'));
+		$api.css($api.dom(".type1"),"display:flex;");
+		opentask0();
+    };
+    
+	function opentask0(){
+		name = "task0";
+		api.closeFrame({name:"bottom_btn"});
+		var headerH = $api.dom('header').offsetHeight;
+		var navH = $api.dom('#nav').offsetHeight;
+		var typeH = $api.dom('.type1').offsetHeight;
+    	api.openFrame({
+            name: 'task0',
+            url: './task0.html',
+            reload:true,
+            rect: {
+                x: 0,
+                y: headerH + navH + typeH,
+                w: 'auto',
+                h: 'auto'
+            }
+        });
+	}
+	
+	function opentask1(){
+		name = "task1";
+		$api.addCls($api.domAll(".type2 .item")[1], "active");
+		var headerH = $api.dom('header').offsetHeight;
+		var navH = $api.dom('#nav').offsetHeight;
+		var typeH = $api.dom('.type2').offsetHeight;
+    	api.openFrame({
+            name: 'task1',
+            url: './task1.html',
+            reload:true,
+            rect: {
+                x: 0,
+                y: headerH + navH + typeH,
+                w: 'auto',
+                h: 'auto'
+            }
+        });
+	}
+
+    function switchTab(status,tag) {
+        if(tag == $api.dom('.nav tab .active')) return;
+        var eTabs = $api.domAll('.nav-tab'), index = 1;
+        for(var i = 0, len = eTabs.length; i < len; i++)
+			if(tag == eTabs[i])
+				index = i;
+			else
+				$api.removeCls(eTabs[i], 'active');
+		$api.addCls(eTabs[index], 'active');
+		restSwitch();
+		if(status == null){
+			var headerH = $api.dom('header').offsetHeight;
+			var navH = $api.dom('#nav').offsetHeight;
+			$api.css($api.dom(".type"),"display:none;");
+	    	api.openFrame({
+	            name: 'calendar',
+	            url: './calendar.html',
+	            rect: {
+	                x: 0,
+	                y: headerH + navH,
+	                w: 'auto',
+	                h: 'auto'
+	            }
+	        });
+	        api.closeFrame({name:"task0"});
+	        api.closeFrame({name:"task1"});
+		}else if(status == "todo"){
+			api.closeFrame({name:"task1"});
+			$api.css($api.dom(".type2"),"display:none;");
+			$api.css($api.dom(".type1"),"display:flex;");
+			opentask0();
+		 	api.closeFrame({name:"calendar"});
+		}else{
+			api.closeFrame({name:"task0"});
+			$api.css($api.dom(".type1"),"display:none;");
+			$api.css($api.dom(".type2"),"display:flex;");
+			opentask1();
+			api.closeFrame({name:"calendar"});
+		}
+    }
+    
+    function switchItems(state, tag,ty){
+		if(tag == $api.dom($api.dom("." + ty),'.item .active')) return;
+		var items = $api.domAll($api.dom("." + ty),'.item'), index = 1;
+		for(var i = 0, len = items.length; i < len; i++) 
+			if(tag == items[i]) 
+				index = i;
+			else
+				$api.removeCls(items[i], 'active');
+		$api.addCls(items[index], 'active');
+		api.execScript({
+		    frameName: name,
+		    script: 'switchTab("' + state + '");'
+		});
+    }
+    
+    function restSwitch(){
+		var items = $api.domAll('.item'), index = 1;
+		for(var i = 0, len = items.length; i < len; i++){
+			$api.removeCls(items[i], 'active');
+		}
+		$api.addCls(items[1], "active");
+    }
+</script>

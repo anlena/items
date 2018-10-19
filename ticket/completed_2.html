@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	html,body{background:#ffffff;}
+    	#block{ height:auto;padding:0 15px; }
+    	.card{padding:0 3px!important;}
+    	.card input{width:100%;color:#999;}
+    	/*.card .status input{color:#00a200!important;}*/
+    	#block .focus{padding:0 3px!important;}
+    	#block .focus p{border:1px solid #DDDDDD;padding:8px;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		{{? it != null}}
+    	<div class="card">
+      		<div class="left">竣工时间</div>
+			<div class="center"><input type="text" value="{{? it.data != null && it.data.time != null}}{{=it.data.time}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+      	<div class="focus">
+      		<h4>售后服务内容</h4>
+			<p id="desc" class="center" contenteditable="false" >{{? it.data != null && it.data.content != null}}{{=it.data.content}}{{??}}暂无信息{{?}}</p>
+      	</div>
+      	<div class="focus">
+      		<h4>使用材料</h4>
+			<p id="desc" class="center" contenteditable="false">{{? it.data != null && it.data.material != null}}{{=it.data.material}}{{??}}暂无信息{{?}}</p>
+      	</div>
+    	<div class="card">
+      		<div class="left">收费情况</div>
+			<div class="center"><input type="text" value="{{? it.data != null && it.data.is_charge != null}}{{=it.data.is_charge}}{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+      	</div>
+      	{{? it.data != null && it.data.state == 1}}
+	    	<div class="card">
+	      		<div class="left">收费金额</div>
+				<div class="center"><input type="text" value="{{? it.data != null && it.data.fee != null}}{{=it.data.fee}}元{{??}}暂无信息{{?}}" disabled="disabled" /></div>
+	      	</div>
+	    {{?}}
+    	<div class="card">
+      		<div class="left">服务结果</div>
+			<div class="center">{{? it.data != null && it.data.serv != null}}{{=it.data.serv}}{{??}}暂无信息{{?}}</div>
+      	</div>
+      	{{?}}
+	</script>
+	<div id="block"></div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function() {
+		ajaxLoad();
+    };
+    
+	// 加载数据
+	function ajaxLoad(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getServRecord',"get",{
+			"id": api.pageParam.id,
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+</script>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css" />
+    <style>
+    	html,body{background:#ffffff;}
+    	#block{ height:auto;padding:0px 15px 0 15px;}
+    	h4{font-size:16px;color:#666666;font-weight:normal;margin-top:25px;}
+    	.image-box{border:1px solid #DDDDDD;margin-top:10px;}
+    	.big-bt{background:#ffffff;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		<h4>安装前</h4>
+		<div id="before" class="image-box flex-wrap">
+  			{{? it != null && it.attaches.before != null}}
+  			{{~it.attaches.before:val:index}}
+  				{{ before.push(val.image); }} 
+      			<div>
+      				<img onclick='viewImage({{=index}},"before");' src="{{=val.image}}"/>
+      				<span onclick='revAttach(this.parentNode,{{=val.id}},"before")'></span>
+      			</div>
+      		{{~}}
+      		{{?}}
+			<div id="addPic" class="flex-wrap flex-vertical bt" tapmode="bthover" onclick="addPic('before');">
+				<img src="../../image/photo_bt.png"/>
+				<p>上传图片</p>
+			</div>
+		</div>
+		<div class="big-bt blue"><input type="button" value="上传" onclick="subAttachment('before');" /></div>
+		<h4>安装过程</h4>
+		<div id="process" class="image-box flex-wrap">
+  			{{? it != null && it.attaches.process != null}}
+  			{{~it.attaches.process:val:index}}
+  				{{ process.push(val.image); }} 
+      			<div>
+      				<img onclick='viewImage({{=index}},"process");' src="{{=val.image}}"/>
+      				<span onclick='revAttach(this.parentNode,{{=val.id}},"process")'></span>
+      			</div>
+      		{{~}}
+      		{{?}}
+			<div id="addPic" class="flex-wrap flex-vertical bt" tapmode="bthover" onclick="addPic('process');">
+				<img src="../../image/photo_bt.png"/>
+				<p>上传图片</p>
+			</div>
+		</div>
+		<div class="big-bt blue"><input type="button" value="上传" onclick="subAttachment('process');" /></div>
+		<h4>安装后</h4>
+		<div id="after" class="image-box flex-wrap">
+  			{{? it != null && it.attaches.after != null}}
+  			{{~it.attaches.after:val:index}}
+  				{{ after.push(val.image); }} 
+      			<div>
+      				<img onclick='viewImage({{=index}},"after");' src="{{=val.image}}"/>
+      				<span onclick='revAttach(this.parentNode,{{=val.id}},"process")'></span>
+      			</div>
+      		{{~}}
+      		{{?}}
+			<div id="addPic" class="flex-wrap flex-vertical bt" tapmode="bthover" onclick="addPic('after');">
+				<img src="../../image/photo_bt.png"/>
+				<p>上传图片</p>
+			</div>
+		</div>
+		<div class="big-bt blue"><input type="button" value="上传" onclick="subAttachment('after');" /></div>
+	</script>
+	<div id="block">      	
+	</div>
+</body>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	var before = [], process = [], after = [];
+	
+	apiready = function(){
+		ajaxLoad();
+	}
+	
+	// 加载数据
+	function ajaxLoad(){
+		ajaxRequest('getTicketRecord',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			if(ret)
+            	renderHtml(ret.SvcCont);
+		});
+	}
+    // 新增页面
+	function renderHtml(svc){
+    	var rowFn = doT.template($api.byId('rows-template').text);
+    	$api.byId('block').innerHTML = rowFn(svc);
+    	api.parseTapmode();
+	}
+	
+	
+	//图片添加
+	function addPic(type) {
+		var ary = [{
+			code : 'camera',
+			name : '拍摄照片'
+		}, {
+			code : 'album',
+			name : '手机相册'
+		}];
+		api.actionSheet({
+			buttons : ['拍摄照片', '手机相册']
+		}, function(ret, err) {
+			var index = ret.buttonIndex;
+			if (index <= ary.length) {
+				var item = ary[index - 1];
+				getPicture(item.code, function(pic) {
+					if (pic && pic.data && pic.data != "") {
+						var url = pic.data;
+						var imgLength = $api.domAll('#'+ type +' div').length;
+						var str = "<div><img  class='new' src='" + url + "' onclick='viewImage("+ imgLength +",\""+ type +"\");' /><span onclick='revPic(this.parentNode,"+ imgLength +",\""+ type +"\");'></span></div>";
+						if(type == "before"){
+							before.push(url);
+						}else if(type == "process"){
+							process.push(url);
+						}else if(type == "after"){
+							after.push(url);
+						}
+						$api.before($api.dom($api.byId(type), "#addPic"), str);
+					}
+				});
+			}
+		});
+	}
+	
+	//删除图片
+	function revPic(dom,index,type) {
+		$api.remove(dom);
+		if(type == "before"){
+			before.images.splice(index - 1,1);
+		}else if(type == "process"){
+			process.images.splice(index - 1,1);
+		}else if(type == "after"){
+			after.images.splice(index - 1,1);
+		}
+	}
+	
+	function revAttach(dom, id, type){
+		ajaxRequest("revAttach","post", { id: id } ,function(ret,error){
+			revPic(dom);
+	    });
+	}
+	
+	//图片预览
+	function viewImage(i,type){
+		var photoBrowser = api.require('photoBrowser');
+        var img = [];
+		if(type == "before"){
+			img = before;
+		}else if(type == "process"){
+			img = process;
+		}else if(type == "after"){
+			img = after;
+		}
+		
+		if(photoBrowser != null){
+		    photoBrowser.open({
+			    images: img,
+			    bgColor: '#000',
+		    	activeIndex: i
+			}, function(ret, err) {
+				if(ret && ret.eventType == 'click'){
+					photoBrowser.close();
+				}
+			});
+ 		}
+	}
+	
+	
+	function subAttachment(type){
+		var files = {};
+		var pics = $api.domAll($api.byId(type), '.new');
+		for(var i = 0;i < pics.length;i++){
+			var url = $api.attr(pics[i],'src');
+			files["file" + i] = url;
+		}
+		
+		api.showProgress({
+			title : '照片上传中...',
+			modal : true
+		});
+		var bodyParam = {
+			"id":api.pageParam.id,
+			"type":type
+		};
+		if (api.pageParam.id != null)
+			bodyParam.id = parseInt(api.pageParam.id);
+		ajaxRequest('subAttachment', 'post', bodyParam, function(ret, error) {
+			if(ret){
+				api.toast({
+					msg : '照片上传成功',
+					duration : 1000,
+					location : "middle"
+				})
+            }
+		},files);
+	}
+		
+</script>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css"/>
+    <style>
+    	html,body{background:rgba(0,0,0,0.2)}
+    	#wrap{align-items: center;padding: 0 15px;justify-content: center;}
+    	.box{background:#fff;height:60%!important;width:100%;border-radius:3px;padding:10px 0;}
+    	.title{padding:10px 0 15px 0;font-size:17px;justify-content: space-between;}
+    	.title button{padding:0 15px;}
+    	.title button:first-of-type{color:#A5A5A5;}
+    	.title button:last-of-type{color:#2B9CE8;}
+    	.text p{display:block;-webkit-user-select: text;padding:10px 15px;line-height:1.5;max-height:100%;text-align:justify;overflow:auto;}
+    	.text p:empty::before{ color:#989898; content:attr(placeholder);}
+    </style>
+</head>
+<body>
+    <div id="wrap" class="flex-wrap flex-vertical flex-con">
+    	<div id="block" class="box">
+    		<div class="title flex-wrap border-b">
+    			<button class="cancle" onclick="api.closeFrame();">取消</button>
+    			<button class="ensure" onclick="handleTask()">确定</button>
+    		</div>
+    		<div class="text flex-con flex-wrap">
+    			<p id="text" class="flex-con" contenteditable="true" placeholder="请填写驳回说明..."></p>
+    		</div>
+    	</div>
+    </div>
+</body>
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript" src="../../script/tool.js"></script>
+<script type="text/javascript">
+	var storageName = "";
+	var initHeight = null;
+	var keyBoard = 'close';
+	apiready = function(){
+		listenScreen();
+		if(api.systemType == 'ios'){
+			$api.css($api.dom(".box"),"height:40%!important;");
+		} 
+	}
+	
+	function handleTask(){
+		var text = $api.text($api.byId("text"));
+		if (!fieldValidate(text, '备注信息')) return;
+		var bodyParam = {
+			"id":api.pageParam.id,
+			"desc":text
+		};
+		ajaxRequest('rejectTicket', 'post', bodyParam, function(ret, error) {
+			if(ret){
+				api.toast({
+					msg : '提交成功',
+					duration : 800,
+					location : "middle"
+				});
+				setTimeout(function() {
+					api.execScript({
+						name:'task_detail',
+						frameName:'task_detail',
+		                script: 'closeFrame();'
+	                });
+				}, 500);
+				api.execScript({
+					name:'menu_ticket',
+					frameName:'task0',
+	                script: 'reload();'
+                });
+                api.closeFrame({name:"reject_box"});
+			}	
+		});
+	}
+	
+</script>

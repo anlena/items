@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <link rel="stylesheet" type="text/css" href="../../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/style.css"/>
+    <style>
+    	#wrap{position: relative;}
+  		.content{background:#ffffff;padding-bottom:15px;}
+  		.title .name{text-align:center;color:white;font-weight:normal;}
+  		.content .card .left{ box-sizing: border-box; width: 30px;border-right: 1px solid #3892ce; position: relative; text-align: center; }
+		.content .card .left span{ width: 12px; height: 12px; background: #3892ce;border-radius:50%; background-size: 12px 12px; position: absolute; right: -7px; top: 0px; }
+		.content .card .right{ box-sizing: border-box; padding: 0px 0px 5px 15px; position: relative; }
+		.row-box{ padding: 0px 8px 15px 8px; color:#7e7e7e; position: relative; }
+		.row-box p.head{ line-height: 18px; font-size:15px;padding-left:8px;color:#333333;}
+		.row-box p span{float:right;padding-right:5px;}
+		.row-box .time{padding-left:0px;font-size:12px;line-height:20px;padding-left:8px;}
+		.row-box p.desc{ line-height:1.4;font-size:11px;padding-top:5px;font-size:13px;color:#000000;padding-left:0px;}
+		.content .card:last-of-type .left span{background:url(../../image/right_blue.png) no-repeat center center ;background-size: 16px 16px;}
+   		.content .card:last-of-type .left{border:none;}
+   		#block .card .status{color:#00a200!important;}
+    </style>
+</head>
+<body>
+	<script id="rows-template" type="text/x-dot-template">
+		<div class="content">
+			<div class="list" style="margin-top: 20px;">
+				{{? it.publish != null}}
+				<div class="card flex-wrap">
+					<div class="left">
+						<span></span>
+					</div>
+					<div class="right flex-con">
+						<div class="row-box">
+							<p class="head">工单发布</p>
+							<p class="time">{{=it.publish.date}}</p>
+							<p class="desc">【{{=it.publish.user}}】发布工单</p>
+						</div>
+					</div>
+				</div>
+				{{?}}
+				{{? it.deal != null}}
+				<div class="card flex-wrap">
+					<div class="left">
+						<span></span>
+					</div>
+					<div class="right flex-con">
+						<div class="row-box">
+							<p class="head">工单处理</p>
+							<p class="time">{{=it.deal.date}}</p>
+							<p class="desc">【{{=it.publish.user}}】处理工单</p>
+						</div>
+					</div>
+				</div>
+				{{?}}
+				{{? it.confirm != null}}
+				<div class="card flex-wrap">
+					<div class="left">
+						<span></span>
+					</div>
+					<div class="right flex-con">
+						<div class="row-box">
+							<p class="head">工单确认</p>
+							<p class="time">{{=it.deal.date}}</p>
+							<p class="desc">【{{=it.confirm.user}}】确认工单</p>
+						</div>
+					</div>
+				</div>
+				{{?}}
+				{{? it.done != null}}
+				<div class="card flex-wrap">
+					<div class="left">
+						<span></span>
+					</div>
+					<div class="right flex-con">
+						<div class="row-box">
+							<p class="head">工单完成</p>
+							<p class="time">{{=it.done.date}}</p>
+							<p class="desc">【{{=it.done.user}}】完成工单</p>
+						</div>
+					</div>
+				</div>
+				{{?}}
+			</div>
+		</div>
+    	<div class="h10"></div>
+    	<div id="block">
+	    	<div class="card">
+	      		<div class="left">响应时长</div>
+				<div class="center"><input type="text" value="{{=it.close}}" disabled="disabled" /></div>
+	      		<div class="status" style="color:{{=it.color}}">未超时</div>
+	      	</div>
+	    	<div class="card">
+	      		<div class="left">处理时长</div>
+				<div class="center"><input type="text" value="{{=it.handle}}"  disabled="disabled" /></div>
+	      	</div>
+		</div>
+	</script>
+    <div id="wrap" class="flex-wrap flex-vertical flex-con"></div>
+</body>
+</html>
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../script/des.js"></script>
+<script type="text/javascript" src="../../script/doT.min.js"></script>
+<script type="text/javascript" src="../../script/base.js"></script>
+<script type="text/javascript">
+	apiready = function() {
+		$api.fixStatusBar( $api.dom('header') );
+		ajaxLoad();
+    };
+    
+    // 加载数据
+	function ajaxLoad(){
+		api.showProgress({
+			title : '页面加载中...',
+			modal : true
+		});
+		ajaxRequest('getTicketProcess',"get",{
+			"id": api.pageParam.id
+		},function(ret,error){
+			var svc = ret.SvcCont;
+			if(svc != null && svc != "") {
+		    	var rowFn = doT.template($api.byId('rows-template').text);
+		    	$api.dom('#wrap').innerHTML = rowFn(svc);
+		    	api.parseTapmode();
+			}else{
+				api.toast({
+					msg : "暂无数据！",
+					duration : 1000,
+					location : "middle"
+				});
+			}
+		});
+	}
+</script>
